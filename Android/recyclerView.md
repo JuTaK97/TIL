@@ -1,6 +1,6 @@
 ## RecyclerView로 간단한 앱 만들기
 
-roomDB.md에서 이어지는 내용이다.
+[RoomDB.md]에서 이어지는 내용이다.
 
 
 ## **0. MainActivity와 MainViewModel 만들어 주기**
@@ -24,18 +24,18 @@ roomDB.md에서 이어지는 내용이다.
   따라서 MainViewModel의 첫 부분을<br />
   ```class MainViewModel(application: Application) : AndroidViewModel(application){``` 로 바꿔 준다.
   AndroidViewModel이 바로 application context를 사용할 수 있게 해주는 class이다.
-<br />
+<br /><br />
   repository는 DB와 View의 소통 창구이다. MainViewModel에 repository를 생성해 준다.
   ```Kotlin
   private val jutakRepository by lazy { (application as App).jutakRepository }
   ```
   그리고 repository에 만들었던 함수를 써먹기 위해 함수들을 만든다.
 
-  - 종류 1: 그냥 fun
+  - 종류 1:   그냥 fun<br />
     repository에서 그냥 fun이었던 함수는 별 다를게 없다.<br />
     ```fun FUNCTION_1() = jutakRepository.FUNCTION_1()```
-    이렇게 이어주면 된다.<br />
-  - 종류 2: **suspend fun**
+    이렇게 이어주면 된다.<br /><br />
+  - 종류 2:   **suspend fun**<br />
     repository에서 suspend fun이었던 함수는 다음과 같이 한다.
     ```
     fun FUNCTION_2(...) {
@@ -43,10 +43,11 @@ roomDB.md에서 이어지는 내용이다.
                 jutakRepository.FUNCTION_2(...)
             }
         }
-    ```<br />
+    ```
+    <br />
     이제 RecyclerView를 구현하기 위한 준비가 끝났다.<br /><br />
     
-## **1. Adapter 만들기**
+## 1. Adapter 만들기
 
 새로운 Kotlin 클래스 JutakAdapter를 만들어 준다.
 ```Kotlin
@@ -56,7 +57,7 @@ class JutakAdapter : RecyclerView.Adapter<JutakAdapter.JutakViewHolder>(){
         RecyclerView.ViewHolder(binding.root)
 }
 ```
- ```ItemJutakBinding```은 Jutak이라는 자료가 View에서 어떻게 표시될 것인지를 나타내는 xml 파일과 관련되어 있다.<br />
+ ```ItemJutakBinding```은 Jutak이라는 타입의 객체가 View에서 어떻게 표시될 것인지를 나타내는 xml 파일과 관련되어 있다.<br />
  res 폴더의 layout 폴더에 새 xml 파일을 만들어준다. 이름은 item_jutak.xml이 되면 된다. 세부적인 디자인은 나중에 하면 된다.<br /><br />
  이제 JutakAdapter 클래스가 RecyclerView의 Adapter로 작동할 수 있도록 멤버 함수들을 구현해야 한다.<br /><br />
  그 전에, Adapter가 정보들(Jutak 객체들)을 담아 둘 공간이 필요하다. 
@@ -83,4 +84,26 @@ RecyclerView에 표시할 여러 값들을 담는 곳이 ```holder```가 되고,
 textTitle.text = data.title
 ```
 ```item_jutak.xml```에 있는 textView의 id인 ```textTile```의 text를 ```data.title```로 바꿔주는 것이다. 물론 이때 ```title```은 ```Jutak```의 한 column이다.<br /><br />
-이제 Adapter를 만들었으니 MainViewModel 등과 연결시켜야 한다.
+이제 Adapter를 만들었으니 MainViewModel 등과 연결시켜야 한다.<br /><br />
+## 2. MainActivity에 Adapter 만들기
+
+MainActivity 클래스에 adapter를 선언해 준다.
+```Kotlin
+private lateinit var jutakAdapter: JutakAdapter
+private lateinit var jutakLayoutManager: LinearLayoutManager
+```
+그리고 onCreate() 함수 안에 lateinit들을 마저 선언해 준다.
+```Kotlin
+jutakAdapter = JutakAdapter()
+jutakLayoutManager = LinearLayoutManager(this)
+binding.recyclerViewJutak.apply{
+      adapter = jutakAdapyer
+      layoutManager = jutakLayoutManager
+}
+```
+아직 activity_main.xml에 recyclerView를 넣어주지 않았으면, ```recycler_view_jutak```을 id로 갖는 recyclerView를 추가해 준다.<br /><br />
+## 3. XML 파일 디자인하기
+
+먼저 ``item_jutak.xml```을 만들어 본다.
+
+[roomDB]: https://github.com/JuTaK97/TIL/blob/main/Android/roomDB.md
