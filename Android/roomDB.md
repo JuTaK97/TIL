@@ -137,4 +137,5 @@
         }
     }
     ```
-    App은 database를 private val로 갖고, repository도 val로 갖는다. 4번에서 했듯 repository 객체를 만들 땐 Dao를 parameter로 해서 만드는 것을 확인할 수 있다.
+    App은 database를 private val로 갖고, repository도 val로 갖는다. 4번에서 했듯 repository 객체를 만들 땐 Dao를 parameter로 해서 만드는 것을 확인할 수 있다.<br />
+    마지막으로 manifest에서 ```android:name=".App"```를 추가해 줘야 한다.
