@@ -104,6 +104,133 @@ binding.recyclerViewJutak.apply{
 아직 activity_main.xml에 recyclerView를 넣어주지 않았으면, ```recycler_view_jutak```을 id로 갖는 recyclerView를 추가해 준다.<br /><br />
 ## 3. XML 파일 디자인하기
 
-먼저 ``item_jutak.xml```을 만들어 본다.
+먼저 ```item_jutak.xml```을 만들어 본다.<br /><br />
+jutak은 title과 content라는 두 column을 가지는 자료라고 하자. 그러면 title과 content를 표시할 TextView를 마련해 주자.<br />
+그리고 그 View를 삭제할 때 쓸 버튼을 하나 만든다.
+```Kotlin
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    ...기타등등 설정들 >
 
-[roomDB]: https://github.com/JuTaK97/TIL/blob/main/Android/roomDB.md
+    <TextView
+        android:id="@+id/text_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" 
+        ...기타등등 설정들 />
+
+    <TextView
+        android:id="@+id/text_detail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        ...기타등등 설정들 />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        ...기타등등 설정들 >
+    </Button>
+</androidx.constraintlayout.widget.ConstraintLayout>
+```
+이제 ```JutakAdapter```에 남겨두었던 ```onBindViewHoder``` 함수를 완성할 수 있다.
+```Kotlin
+    override fun onBindViewHolder(holder: TodoViewHolder, position: Int) {
+        val data = todos[position]
+        holder.binding.apply {
+            textTitle.text = data.title
+            textDetail.text = data.content
+        }
+    }
+ ```
+이처럼 item_jutak.xml의 TextView들의 id를 따라가서 text를 넣어 줄 수 있다.<br /><br />
+그 다음으로 activity_main.xml을 디자인 해 본다.
+LinearLayout 하에 recyclerView 하나를 넣어 주고, View 추가용 floating button 하나를 넣어 주었다.
+```Kotlin
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.MainActivity"              //중요
+    android:orientation="vertical">
+    
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view_todo"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        tools:listitem="@layout/item_todo"
+        />
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/addButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        app:srcCompat="@android:drawable/ic_input_add" />
+</LinearLayout>
+```
+이제 프로젝트의 모든 틀이 마무리되었다.
+## 4. 동작 추가하기
+이제 setOnClicker 등을 이용하여 구체적인 구현을 해 본다.
+
+해야할 것은 총 3가지이다.
+1. activity_main.xml에 만든 추가하기 버튼 구현
+2. item_jutak.xml에 만든 삭제하기 버튼 구현
+3. MainViewModel이 LiveDate를 observe하고 표시되는 것을 update.
+<br /><br />
+## 4-1. RecyclerView에 view를 추가하는 버튼
+버튼을 눌렀을 때 입력을 받아줄 대화상자가 뜨게 해 본다.<br />
+ActivityMain에 다음 함수를 추가한다.
+```Kotlin
+private fun showDialog() {
+    val dialogBinding = DialogAddTodoBinding.inflate(layoutInflater)
+    val dialogBuilder = AlertDialog.Builder(this)
+        .setTitle("Add Todos")
+        .setView(dialogBinding.root)
+        .setPositiveButton("create") { _, _ ->
+            viewModel.addTodo(
+                dialogBinding.dialogTextTitle.text.toString(),
+                dialogBinding.dialogTextContent.text.toString()
+            )
+            Toast.makeText(applicationContext, "Create", Toast.LENGTH_SHORT).show()
+        }
+        .setNegativeButton("cancel") { _, _ ->
+            Toast.makeText(applicationContext, "Cancel", Toast.LENGTH_SHORT).show()
+        }
+    val dialog = dialogBuilder.create()
+    dialog.show()
+}
+```
+그리고 대화상자의 디자인을 담당할 ```dialog_add_todo.xml```을 만들어 준다.
+```Kotlin
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <EditText
+        android:id="@+id/dialog_text_Title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+    <EditText
+        android:id="@+id/dialog_text_Content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+</LinearLayout>
+```
+이제 ActivityMain의 onCreate 안에 setonclicker를 설정해준다.
+```Kotlin
+binding.addButton.setOnClickListener {
+    showDialog()
+}
+```
+## 4-2. RecyclerView에서 view를 삭제하는 버튼
+
+
+[RoomDB.md]: https://github.com/JuTaK97/TIL/blob/main/Android/roomDB.md
