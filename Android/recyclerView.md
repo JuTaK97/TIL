@@ -287,6 +287,7 @@ holder.binding.deleteButton.setOnClickListener {
 class MainActivity : AppCompatActivity(), CallbackInterface {
 ...
 }
+```
 그리고 onCreate함수 안에 adapter를 생성할 때 interface도 넣어줘야 하므로 다음과 같이 바꾼다.
 ```
 jutakAdapter = JutakAdapter(this)
