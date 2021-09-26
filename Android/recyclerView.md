@@ -300,6 +300,43 @@ override fun callback(jutak : Jutak) {
 ```
 <br /><br />
 ## 4-3. Database의 변화를 observe해서 알맞게 update 및 표시하기
-가장 마지막으로, DB의 정보가 바뀌면 다른 모두가 그걸 알고 update해 주어야 한다.
+가장 마지막으로, DB의 정보가 바뀌면 다른 모두가 그걸 알고 update해 주어야 한다. 이를 위해 LiveData를 활용한다. <br />
+Dao에서, 저장된 모든 정보를 LiveData 타입으로 가져오는 함수를 다음과 같이 만든다.
+```Kotlin
+//Dao
+@Query("SELECT * FROM Jutak")
+fun getAllJutak() : LiveData<List<Jutak>>
+```
+Repository에서는 이렇게 이어받는다.
+```
+//Repository
+fun getJutak() = jutakDao.getAllJutak()
+```
+그리고 ViewModel에서 이렇게 이어받아 전달한다.
+```
+//ViewModel
+fun observeJutak() = jutakRepository.getJutak()
+```
+최종적으로 MainActivity에 전달된 LiveData 타입의 자료를 observe한다. ```.observe()```는 LiveData.java에 내장된 함수이다.<br />
+onCreate 함수 내에 다음과 같이 추가한다.
+```Kotlin
+//MainActivity
+viewModel.observeJutak().observe(this,{
+    jutakAdapter.setJutaks(it)
+})
+```
+DB의 LiveData를 계속 지켜보고 있다가, 변화가 생기면 바로 Adapter에게 알려주게 된다. 이걸 받은 adapter는,
+```Kotlin
+//Adapter
+fun setJutaks(jutaks: List<Jutak>) {
+    this.jutaks =jutaks
+    this.notifyDataSetChanged()
+}
+```
+이 함수로 받아서 Adapter 자신이 가지고 있던 private var를 업데이트 해준다. <br />
+그리고 ```this.notifyDataSetChanged()```를 통해 실제 View에도 반영되도록 한다.<br /><br /><br />
+
+[완성본 링크] 
 
 [RoomDB.md]: https://github.com/JuTaK97/TIL/blob/main/Android/roomDB.md
+[완성본 링크]: https://github.com/JuTaK97/waffle-android-assign/tree/assignment2/Assignment2
