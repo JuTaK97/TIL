@@ -52,11 +52,12 @@
 새로운 Kotlin 클래스 JutakAdapter를 만들어 준다.
 ```Kotlin
 class JutakAdapter : RecyclerView.Adapter<JutakAdapter.JutakViewHolder>(){
-
-    inner class JutakViewHolder(val binding:ItemJutakBinding) :
-        RecyclerView.ViewHolder(binding.root)
+    
+    private var jutaks : List<Jutak> = listOf()
+    inner class JutakViewHolder(val binding:ItemJutakBinding) : RecyclerView.ViewHolder(binding.root)
 }
 ```
+```jutaks```는 adapter가 표시해야 할 jutak들을 저장해 놓는 List이다. <br />
  ```ItemJutakBinding```은 Jutak이라는 타입의 객체가 View에서 어떻게 표시될 것인지를 나타내는 xml 파일과 관련되어 있다.<br />
  res 폴더의 layout 폴더에 새 xml 파일을 만들어준다. 이름은 item_jutak.xml이 되면 된다. 세부적인 디자인은 나중에 하면 된다.<br /><br />
  이제 JutakAdapter 클래스가 RecyclerView의 Adapter로 작동할 수 있도록 멤버 함수들을 구현해야 한다.<br /><br />
@@ -206,7 +207,7 @@ private fun showDialog() {
     dialog.show()
 }
 ```
-그리고 대화상자의 디자인을 담당할 ```dialog_add_todo.xml```을 만들어 준다.
+그리고 대화상자의 디자인을 담당할 ```dialog_add_todo.xml```을 만들어 준다. (사실 먼저 만들었어야)
 ```Kotlin
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -231,6 +232,73 @@ binding.addButton.setOnClickListener {
 }
 ```
 ## 4-2. RecyclerView에서 view를 삭제하는 버튼
-
+삭제는 조금 더 복잡하다.<br />
+삭제 버튼은 RecyclerView의 한 view 안에 존재한다. ```item_jutak.xml``` 디자인대로 만든 그곳에 있다.<br />
+따라서 클릭의 감지는 adapter가 해야 한다.<br />
+하지만 database에 접근해서 클릭한 jutak 정보를 삭제하는 함수는 MainActivity에 있다.<br />
+가장 상위부터 하위까지 흐름을 정리하면, 먼저 MainActivity에서
+```Kotlin
+//MainActivity
+viewModel.deleteJutak(jutak)
+```
+을 호출하고, MainViewModel은
+```Kotlin
+//MainViewModel
+fun deleteJutak(jutak : Jutak) {
+    viewModelScope.launch {
+        jutakRepository.deleteJutak(jutak)
+    }
+}
+```
+로 받아서 repository에게 넘긴다. repository부터는 suspend fun이기 때문에 ```.launch{}```를 사용한다.
+```Kotlin
+//Repository
+suspend fun deleteJutak(jutak : Jutak) = jutakDao.deleteJutak(jutak)
+```
+Repository는 이렇게 받아서 Dao에게 넘겨준다.
+```Kotlin
+//Dao
+@Delete()
+suspend fun deleteJutak(jutak : Jutak)
+```
+마지막으로 Dao에 있는 다음 함수가 데이터베이스에서 jutak 객체를 삭제하게 된다.<br /><br />
+이제 문제는 Adapter에서 벌어진 일을 MainActivity에게 어떻게 알려주는지이다. <br />
+Interface를 사용해서 해결할수 있다.<br />
+CallbackInterface라는 Kotlin interface class를 만들어 주고, 다음 함수를 만들어 준다.
+```Kotlin
+interface CallbackInterface {
+    fun callback(jutak : Jutak)
+}
+```
+그리고 JutakAdapter의 생성자에 다음과 같이 추가한다.
+```Kotlin
+class TodoAdapter(private val callbackInterface: CallbackInterface) :
+    RecyclerView.Adapter<TodoAdapter.TodoViewHolder>(){
+```
+이제 onBindViewHolder 함수 안에 clicklistener를 추가해 주면 된다.
+```Kotlin
+holder.binding.deleteButton.setOnClickListener {
+    callbackInterface.callback(jutaks[position])
+}
+```
+버튼을 클릭한 jutak의 position 값을 가지고 있으니 List에서 적절한 jutak 객체를 찾아서 parameter로 넣어 준다.<br /><br />
+이제 MainActivity도 다음과 같이 바꾸어 준다. CallbackInterface를 implement하는 것이다.
+```Kotlin
+class MainActivity : AppCompatActivity(), CallbackInterface {
+...
+}
+그리고 onCreate함수 안에 adapter를 생성할 때 interface도 넣어줘야 하므로 다음과 같이 바꾼다.
+```
+jutakAdapter = JutakAdapter(this)
+```
+마지막으로 callBack 함수를 override 해준다.
+```Kotlin
+override fun callback(jutak : Jutak) {
+    viewModel.deleteJutak(jutak)
+}
+```
+<br /><br />
+## 4-3. Database의 변화를 observe해서 알맞게 update 및 표시하기
+가장 마지막으로, DB의 정보가 바뀌면 다른 모두가 그걸 알고 update해 주어야 한다.
 
 [RoomDB.md]: https://github.com/JuTaK97/TIL/blob/main/Android/roomDB.md
