@@ -40,7 +40,7 @@ MemberDao.kt를 만들고, ```member_table```에 요청할 여러 함수들을 �
 interface MemberDao {
 
     @Query("SELECT * FROM member_table")
-    fun getAllMember() : LiveData<Member>
+    fun getAllMember() : LiveData<<List<Member>>
 }
 ```
 #### 1-3. Database
@@ -95,8 +95,72 @@ viewType이 하나일 때는 inner class를 만들었는데, 여러 개면 그�
 inner class MemberType1ViewHolder(var binding : ItemMemberType1Binding): RecyclerView.ViewHolder(binding.root)
 inner class MemberType2ViewHolder(var binding : ItemMemberType2Binding): RecyclerView.ViewHolder(binding.root)
 ```
-이 경우 각각의 xml 파일 이름은 item_member_type1.xml 과 item_member_type2.xml이 되겠다. (xml의 파일 이름대로 하면 된다)<br />
-다음으로 ```onCreateViewHolder()``` 함수를 완성해 본다.
+이 경우 각각의 xml 파일 이름은 item_member_type1.xml 과 item_member_type2.xml이 되겠다. (xml의 파일 이름대로 하면 된다)<br /><br />
+다음으로 ```onCreateViewHolder()``` 함수를 완성해 본다.<br />
+viewType이 여러개이기 때문에, ```onCreateViewHolder()```의 생성자에서 받아온 Int타입의 ```viewType```에 따라 다른 return을 내야 한다.<br />
+그런데 viewType이 하나일 때는 아무 상관 없었는데, 여러개가 되면 문제가 된다. 이때 필요한 것이 새로운 함수이다.<br />
+```onCreateViewHolder()```가 override하는 함수는 필수로 저 위의 3개지만, 여러 다른 함수를 override할 수 있다. <br />
+그중 하나가 지금 사용할 ```getItemViewType```이다.<br />
+```Kotlin
+override fun getItemViewType(position: Int): Int{
+    return 0
+}
+```
+```onCreateViewHolder()```가 불릴 때, 이 함수가 먼저 불려서 viewType을 받아온다. 디폴트 리턴값은 0인데 viewType을 여러 개 쓸거면 상황에 맞게 여러 값을 리턴시켜줘야 한다.
+<br />이때 인자로 받는 ```position```은 member의 인덱스이다. 따라서 다음과 같이 할 수 있다.
+```Kotlin
+override fun getItemViewType(position: Int): Int{
+    return when(members[position].team){
+        "team1" -> 0
+        "team2" -> 1
+        else -> 2
+    }
+}
+```
+물론 지금 가정하고 있는 상황은 표시할 viewType의 member의 team의 종류에 따라 다르게 하겠다는 것이다. return할 자세한 정수값은 맘대로 정해주면 된다.<br />
+이제 다시 ```onCreateViewHolder```로 돌아가서, 
+```Kotlin
+override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    return when(viewType){
+        0 -> {
+            val binding = ItemMemberType1Binding.inflate(LayoutInflater.from(parent.context), parent, false)
+            MemberType1ViewHolder(binding)
+        }
+        1 -> {
+            val binding = ItemMemberType2Binding.inflate(LayoutInflater.from(parent.context), parent, false)
+            MemberType2ViewHolder(binding)
+        }
+        else -> throw IllegalStateException("Illegal viewType")
+    }
+}
+```
+viewType에 맞게 올바른 binding으로 만든 viewHolder를 반환해 주면 된다.<br /><br />
+다음은 ```onBindViewHolder()```이다.
+[recyclerView.md]에서 했던 것과 동일한데 경우를 나눈 것만 추가하면 된다.<br />
+```Kotlin
+override fun onBindViewHolder(holder : RecyclerView.ViewHolder, position: Int) {
+    when(holder) {
+        is MemberTeam1ViewHolder -> {
+            holder.binding.apply {
+                ...
+            }
+        }
+        is MemberTeam2ViewHolder -> {
+            holder.binding.apply {
+                ...
+            }
+        }
+    }
+}
+```
+holder의 타입별로 나눠 주고, ```holder.binding.apply{}``` 안에는 구체적인 xml 파일 내에 디자인된 view들을 채우면 된다.<br />
+예를 들면 item_member_team1.xml에 id가 text_name인 textView가 있다면 
+```
+textName.text = data.name
+```
+과 같이 해 주면 된다. 물론 ```name```은 member 데이터가 가지는 한 column이다.
+
 
 
 [roomDB.md]: https://github.com/JuTaK97/TIL/blob/main/Android/2_roomDB.md
+[recyclerView.md]: https://github.com/JuTaK97/TIL/blob/main/Android/3_RecyclerView.md
