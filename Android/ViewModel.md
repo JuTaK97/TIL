@@ -26,6 +26,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding : ActivityMainBinding
     ...
 }
+```
 그리고 해당 액티비티의 ```onCreate()``` 함수 안에 lateinit을 처리해 준다.
 ```Kotlin
 override fun onCreate(savedInstanceState: Bundle?) {
