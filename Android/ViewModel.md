@@ -17,7 +17,9 @@ android {
   }
 }
 ```
+
 그리고 binding을 할 activity에 가서 다음을 추가한다. 예시는 ```MainActivityt.kt```의 경우이다.
+
 ```Kotlin
 class MainActivity : AppCompatActivity() {
 
