@@ -176,8 +176,70 @@ data class FetchMemberByIdResponse (
 )
 ```
 와 같이 생겼다.<br />
+다음으로, MemberRepository에서 다음 함수를 추가해 준다.
+```Kotlin
+suspend fun fetchDetail(id:Int) : Member {
+    return memberService.fetchDetail(id).body
+}
+```
+역시 상위에서 id를 받아오고, 함수의 파라미터로 넣어준다. 그리고 '그릇'의 내용 중에서 statusCode는 필요하지 않으니, body만 상위로 반환한다.<br />
+DetailViewModel에서는, suspend fun을 실행하기 위해 새로운 scope를 열어 준다.
+```Kotlin
+private val _member = MutableLiveData<Member>()
+val member : LiveData<Member> = _member
 
+
+fun fetchMember(id : Int) : LiveData<Member> {
+    viewModelScope.launch {
+        _member.value = memberRepository.fetchDetail(id)
+    }
+    return member
+}
+```
+LiveData 형태로 관리하게 되는데, repository에게 받아온 정보를 MutableLiveData에 저장하고, 그걸 LiveData 자료형으로 observe하게 된다. [ViewModel.md] 참고<br />
+observe하는 건 최상위의 DetailActivity이고, 파라미터로 id를 내려보내 주는 것도 DetailActivity이다. 따라서 onCreate() 안에 다음과 같이 넣어 준다.
+```Kotlin
+val id : Int = intent.getIntExtra("id", 0)
+viewModel.fetchMember(id).observe(this) {
+    Glide.with(this).load(it.profileImage).into(binding.imageViewProfile)
+    binding.textMemberName.text = it.name
+    lectureAdapter.setLectures(it.lectures)
+}
+```
+먼저, intent를 만들 때 첨가했던 id를 다시 가져오고 그걸 파라미터로 viewModel에게 명령을 보내준다.<br />
+정보를 받아 왔으면(```this```), textView나 imageView 등에 적절히 대입해 주면 된다.<br /><br />
+이때 이미지는 Glide라는 라이브러리를 이용하게 된다.<br />
+```profileImage```는 그냥 Member의 column 중 하나이고, ```imageViewProfile```은 ImageView의 이름이다.<br />
+member의 이름도 적절히 textView에 넣어 주고, RecyclerView에 넣을 상세 정보(```lectures```)는 adapter에게 보내 준다.<br />
+LectureAdapter를 살펴보면, [RecyclerView2]에서 했던 기본 구조가 그대로 들어가 있다.<br />
+ViewModel에게 정보를 받아오는 ```setLectures()```는 우선 ```private var lectures : List<Lecture> = listOf()```를 가지고, 
+```Kotlin
+    fun setLectures(lectures: List<Lecture>?) {
+        if (lectures != null) {
+            this.lectures = lectures
+        }
+        this.notifyDataSetChanged()
+    }
+ ```
+ 를 통해 ```lectures```에 정보를 채워준다.<br />
+ 그리고 ```onBindViewHolder()```에서 ```lectures```리스트의 각 포지션에 있는 lecture의 정보로 view들에 정보를 입력해 주면 된다.
+```Kotlin
+ override fun onBindViewHolder(holder: LectureViewHolder, position: Int) {
+    val lecture = lectures[position]
+    holder.binding.textCredit.text  = lecture.credit.toString()
+    holder.binding.textInstructor.text = lecture.instructor
+    holder.binding.textTitle.text = lecture.title
+}
+```
+정리해 보면,<br />
+1. MainActivity에 표시된 recyclerView의 각 itemView를 클릭하면 상세 정보를 띄우고 싶다.
+2. recyclerView를 관리하는 MemberAdapter에서 clickListener를 설정하고, intent를 통해 새 activity를 열어준다.
+3. 새 activity는 자신의 viewModel에게 정보를 가져오라고 명령하고, viewModel은 retrofit을 가진 이전의 repository에게 명령을 내린다.
+4. Retrofit Service에게 명령과 함께 parameter로 id가 전달되고, 이 id에 맞는 주소에서 정보를 가져온다.
+5. ViewModel까지 정보가 왔으면, DetailActivity에 표시된 recyclerView를 채우기 위해 LectureAdapter에게 받아온 정보(lecture의 리스트)를 보낸다.
+6. LectureAdapter는 이 정보를 보고 자신의 recyclerView에 알맞게 lecture들의 정보를 표기한다.
 
 
 
 [RecyclerView2]: https://github.com/JuTaK97/TIL/blob/main/Android/4_RecyclerView2.md
+[ViewModel.md]: https://github.com/JuTaK97/TIL/blob/main/Android/1_ViewModel.md
