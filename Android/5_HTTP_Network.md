@@ -73,13 +73,12 @@ data class FetchAllMemberResponse(
 )
 ```
 순서대로 statusCode를 나타내는 Int와 body 내용인 List<Member> 형태의 객체로 받겠다는 뜻이다. 앞에서 만들었던 Member는 id, name, team, profile_image, lecture 등을 column으로 가지는 데이터 클래스였다. 실제로 정보를 받아올 URL에 들어가 보면, 
-```
+```Kotlin
 {"statusCode":200,"body":[{"id":1,"name":"beomso0","team":"waffle"},...,{"id":12,"name":"jubilant-choi]","team":"iOS"}]}
 ```
 처럼 되어 있다. 받아올 정보가 어떤 형태로 되어 있는지 보고, 적절한 data class를 만들어서 받아오면 되는 것이다.<br /><br />
 이렇게 완성한 함수 ```fetchAllMember()```는 Int 자료형의 정보 하나와 List<Member> 자료형의 정보 하나를 가지는 객체를 반환한다. 이제 이 함수를 사용해 보자.
-    
-## 3. 받아온 데이터 DB로 저장하기
+
 명령의 흐름과 정보의 흐름을 다시 한번 생각해 보면, 최상위에서 MainActivity가 MainViewModel에게 명령을 내린다. MainViewModel은 Repository에게 명령을 내리고, Repository는 본인이 가지고 있는 RetrofitService의 함수를 이용해 정보를 받아와서 이를 DAO에게 넘긴다. 마지막으로 DAO는 Database에 정보를 저장한다.<br />
 그리고 DB에 뭔가 새로 저장되면, 그걸 observe하고 있던 ViewModel과 MainActivity는 Adapter의 내용을 알아서 바꿀 것이다.<br />
 #### 3-1. MainActivity
