@@ -113,11 +113,12 @@ override fun getItemViewType(position: Int): Int{
     return when(members[position].team){
         "team1" -> 0
         "team2" -> 1
-        else -> 2
+        ...
+        else -> -1
     }
 }
 ```
-물론 지금 가정하고 있는 상황은 표시할 viewType의 member의 team의 종류에 따라 다르게 하겠다는 것이다. return할 자세한 정수값은 맘대로 정해주면 된다.<br />
+물론 지금 가정하고 있는 상황은 표시할 viewType의 member의 team의 종류에 따라 다르게 하는 것이다. return할 정수 값 자체는 맘대로 정해주면 된다.<br />
 이제 다시 ```onCreateViewHolder```로 돌아가서, 
 ```Kotlin
 override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -158,8 +159,38 @@ holder의 타입별로 나눠 주고, ```holder.binding.apply{}``` 안에는 구
 ```
 textName.text = data.name
 ```
-과 같이 해 주면 된다. 물론 ```name```은 member 데이터가 가지는 한 column이다.
+과 같이 해 주면 된다. 물론 ```name```은 member 데이터가 가지는 한 column이다.<br /><br />
+## 3. MainActivity, MainViewModel과 연결하기(복습)
+계속 해오던 대로, 가장 상위의 MainActivity에서는<br />
+```Kotlin
+override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        memberAdapter = MemberAdapter()
+        memberLayoutManager = LinearLayoutManager(this)
+        binding.recyclerViewMember.apply {
+            adapter = memberAdapter
+            layoutManager = memberLayoutManager
+        }
+        viewModel.observeMember().observe(this) {
+            memberAdapter.setMembers(it)
+        }
+}
+```
+과 같이 viewModel에게 observeMember 시킨다음, 그 결과(```LiveData<>``` 형태)를 observe해서 그것(```it```)을 memberAdapter에게 전달한다.<br />
+이 과정을 위해 viewModel은 ```fun observeMember() = memberRepository.getAllMember()``` 한줄이면 충분하고, Adapter는 
+```Kotlin
+fun setMembers(members : List<Member>) {
+    this.members = members
+    this.notifyDataSetChanged()
+}
+```
+와 같은 함수를 추가해 주면 된다. ```this.notifyDataSetChanged()```를 통해 변경 사항을 업데이트 하게 된다.<br /><br />
+이제 MVVM 구조를 활용한 아주 간단한 DB와 그것을 출력할 UI 구축이 완료되었다. 이제 정보를 http를 통해 받아오는 것을 다음 문서에서 공부해 본다.<br /><br />
+    
 
 
 [roomDB.md]: https://github.com/JuTaK97/TIL/blob/main/Android/2_roomDB.md
