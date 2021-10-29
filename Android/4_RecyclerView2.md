@@ -1,5 +1,5 @@
 # 다양한 Viewtype을 이용해서 recyclerView 디자인하기
-viewModel, roomDB, RecyclerView에 이어지는 내용이다.<br /><br />
+[viewModel.md], [roomDB.md], [RecyclerView.md]에 이어지는 내용이다.<br /><br />
 여러 종류의 member의 정보를 recyclerView에 띄워보는 것을 구현해 본다. 이때 정보를 http를 통해 json 형식으로 받아 올 것이다.<br />
 ## 1. DB 구조 짜기(복습)
 #### 1-1. data 
@@ -195,3 +195,4 @@ fun setMembers(members : List<Member>) {
 
 [roomDB.md]: https://github.com/JuTaK97/TIL/blob/main/Android/2_roomDB.md
 [recyclerView.md]: https://github.com/JuTaK97/TIL/blob/main/Android/3_RecyclerView.md
+[viewModel.md]: https://github.com/JuTaK97/TIL/blob/main/Android/1_ViewModel.md
