@@ -239,7 +239,8 @@ ViewModel에게 정보를 받아오는 ```setLectures()```는 우선 ```private 
 5. ViewModel까지 정보가 왔으면, DetailActivity에 표시된 recyclerView를 채우기 위해 LectureAdapter에게 받아온 정보(lecture의 리스트)를 보낸다.
 6. LectureAdapter는 이 정보를 보고 자신의 recyclerView에 알맞게 lecture들의 정보를 표기한다.
 
-
+[완성본 링크] 
 
 [RecyclerView2]: https://github.com/JuTaK97/TIL/blob/main/Android/4_RecyclerView2.md
 [ViewModel.md]: https://github.com/JuTaK97/TIL/blob/main/Android/1_ViewModel.md
+[완성본 링크]: https://github.com/JuTaK97/waffle-android-assign/tree/assignment3/Assignment3
